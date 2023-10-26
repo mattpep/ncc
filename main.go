@@ -7,12 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
-func runServer() {
+func runServer(port string) {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/comments/{postref}", api.GetPostComments).Methods("GET")
@@ -31,10 +32,14 @@ func runServer() {
 	// serve the app
 	fmt.Println("ncc - no cookies comment system")
 	fmt.Println("Copyright 2023 by Matt Peperell")
-	fmt.Println("Server running at 8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	fmt.Printf("Server running at %s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 func main() {
-	runServer()
+	port, present := os.LookupEnv("PORT")
+	if !present {
+		port = "8080"
+	}
+	runServer(port)
 }

@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"text/template"
 )
 
@@ -13,7 +14,7 @@ type templateParams struct {
 	PostRef  string
 }
 
-const Endpoint = "http://localhost:8080"
+var endpoint string
 
 func websiteInsert(post_ref string) (string, error) {
 	snippet := `var ncc = function(){
@@ -70,7 +71,7 @@ func websiteInsert(post_ref string) (string, error) {
 		return "", err
 	}
 
-	err = tmpl.Execute(buf, templateParams{Endpoint: Endpoint, PostRef: post_ref})
+	err = tmpl.Execute(buf, templateParams{Endpoint: endpoint, PostRef: post_ref})
 	if err != nil {
 		return "", err
 	}
@@ -80,6 +81,13 @@ func websiteInsert(post_ref string) (string, error) {
 
 func ServeWebsiteInsert(w http.ResponseWriter, r *http.Request) {
 	postref := r.URL.Query().Get("postref")
+
+	ext_endpoint, present := os.LookupEnv("EXT_ENDPOINT")
+	if present {
+		endpoint = ext_endpoint
+	} else {
+		endpoint = "http://localhost:8080"
+	}
 
 	log.Printf("post ref is >%v<", postref)
 	if postref == "" {

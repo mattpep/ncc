@@ -20,6 +20,16 @@ submitted by users, and also requests to read comments for a given post, and
 comment counts (for post index pages). This part works without cookies or
 authentication - hence the name ncc.
 
+# Configuration
+
+In the spirit of 12factor.net, this application uses environment variables for
+configuration. The possible settings are:
+
+* `PORT` - which local port to run on
+* `DATABASE_URL` - how to connect to the database
+* `EXT_ENDOINT` - the prefix of the public-facing URL of this service (i.e.
+  outside of any loadbalancer or container which might be in use)
+
 # Some caveats
 
 Although this system does not generate, store, or make use of cookies for

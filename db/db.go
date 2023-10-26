@@ -13,8 +13,8 @@ import (
 
 // DB set up
 func SetupDB() (*sql.DB, error) {
-	db_url := os.Getenv("DATABASE_URL")
-	if db_url == "" {
+	db_url, present := os.LookupEnv("DATABASE_URL")
+	if !present {
 		return nil, errors.New("DATABASE_URL not set in the environment")
 	}
 	db, err := sql.Open("postgres", db_url)
