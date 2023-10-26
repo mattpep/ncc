@@ -1,0 +1,7 @@
+CREATE TABLE comments (
+	id SERIAL UNIQUE,
+	display_name VARCHAR(30) NOT NULL,
+	body TEXT NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	post_ref VARCHAR(20) NOT NULL
+);
