@@ -26,7 +26,7 @@ func websiteInsert(post_ref string) (string, error) {
 			var elem = document.createElement("div");
 			elem.id = "ncc-comment-" + comment.id;
 			elem.setAttribute("style", comment_style);
-			
+
 			var author = document.createElement("div");
 			author.classList.add('author');
 			author.setAttribute("style", author_style);
@@ -41,26 +41,39 @@ func websiteInsert(post_ref string) (string, error) {
 			elem.insertAdjacentElement('beforeend', combody);
 			return elem;
 		}
-		var comment_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
-		var xmlHttp = new XMLHttpRequest();
-		xmlHttp.open( "GET", comment_url, false );
-		xmlHttp.send( null );
-		var comment_info = xmlHttp.responseText;
-		var ncc = document.getElementById("ncc");
-		if (null === ncc) {
-			console.log("ncc - could not find a div with id ncc")
-			return
+
+		function pluralise_comments(count) {
+			if (count == 1) {
+				return "comment";
+			}
+			return "comments";
+
 		}
-		else {
-			var elem = document.createElement("hr");
-			ncc.insertAdjacentElement('afterbegin', elem);
-			ncc.insertAdjacentHTML('beforeend', '<div class="ncc-banner">Comments</div>');
-			var comments = JSON.parse(comment_info)["Comments"];
-			for (let com = 0; com < comments.length ; com++) {
-				elem = commentify(comments[com]);
-				ncc.insertAdjacentElement('beforeend', elem);
+
+		function show_comments() {
+			var comment_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
+			var xmlHttp = new XMLHttpRequest();
+			xmlHttp.open( "GET", comment_url, false );
+			xmlHttp.send( null );
+			var comment_info = JSON.parse(xmlHttp.responseText);
+			var comments = comment_info["Comments"];
+			var comment_count = comment_info["Count"];
+			var ncc = document.getElementById("ncc");
+			if (null === ncc) {
+				console.log("ncc - could not find a div with id ncc")
+				return
+			}
+			else {
+				var elem = document.createElement("hr");
+				ncc.insertAdjacentElement('afterbegin', elem);
+				ncc.insertAdjacentHTML('beforeend', '<div class="ncc-banner">'+ comment_count +" " + pluralise_comments(comment_count) +'</div>');
+				for (let com = 0; com < comments.length ; com++) {
+					elem = commentify(comments[com]);
+					ncc.insertAdjacentElement('beforeend', elem);
+				}
 			}
 		}
+		show_comments();
 
 		//})
 	}

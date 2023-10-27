@@ -67,7 +67,7 @@ func GetPostComments(w http.ResponseWriter, r *http.Request) {
 		json_comment := types.Comment{Id: dbcomment.Id, DisplayName: dbcomment.DisplayName, Body: dbcomment.Body}
 		json_comments = append(json_comments, json_comment)
 	}
-	var response = types.JsonResponse{Comments: json_comments}
+	var response = types.JsonResponse{Comments: json_comments, Count: len(json_comments)}
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(response)
