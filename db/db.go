@@ -33,7 +33,6 @@ func GetPostComments(post_ref string) ([]types.CommentEntry, error) {
 	if err != nil {
 		return nil, errors.New("Could not connect to database")
 	}
-	// log.Println(fmt.Sprintf("looking for post ref= %s", post_ref))
 	rows, err := db.Query("SELECT id, body, display_name FROM comments WHERE post_ref = $1", post_ref)
 
 	if err != nil {
@@ -55,7 +54,6 @@ func GetPostComments(post_ref string) ([]types.CommentEntry, error) {
 			log.Println(fmt.Sprintf("could not scan row: %v", err))
 			return nil, errors.New(fmt.Sprintf("Error parsing response from db: %v", err))
 		}
-		// fmt.Printf("got row body=%s ref=%s", body, post_ref)
 		comments = append(comments, types.CommentEntry{Id: id, Body: body, DisplayName: display_name, PostRef: post_ref})
 	}
 	return comments, nil
@@ -67,7 +65,6 @@ func GetPostCommentCount(post_ref string) (int, error) {
 	if err != nil {
 		return 0, errors.New("Could not connect to database")
 	}
-	// log.Println(fmt.Sprintf("looking for post ref= %s", post_ref))
 	result := db.QueryRow("SELECT count(*) as c FROM comments WHERE post_ref = $1", post_ref)
 
 	if err != nil {

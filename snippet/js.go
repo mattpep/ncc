@@ -73,10 +73,39 @@ func websiteInsert(post_ref string) (string, error) {
 				}
 			}
 		}
-		show_comments();
+		function submitComment(form) {
+			var comment_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
+			var commentData = new FormData(form);
 
-		//})
-	}
+			var c = Object.fromEntries(commentData);
+
+			const response = fetch(comment_url, { // await fetch(url, ... )
+
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(c),
+
+			});
+		}
+		function show_comment_form() {
+			var ncc = document.getElementById("ncc");
+			var form_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
+			var comment_form = '<form id="submit_comment">' +
+			'<div class="field" style="padding-bottom: 1em;"><label for="name" style="display: block;">Name</label><input type="text" size=30 name="name" /></div>' +
+			'<div class="field" style="padding-bottom: 0.6em;"><label for="body" style="display: block;">Comment</label><textarea cols=45 rows=6 name="body" placeholder="Enter comment here…"></textarea></div>' +
+			'<div class="field" style="padding-bottom: 1em;"><input type="submit" value="submit" name="submit"></div>' +
+			'</form>';
+			ncc.insertAdjacentHTML('beforeend', comment_form);
+		}
+		show_comments();
+		show_comment_form();
+		document.getElementById("submit_comment").addEventListener("submit", function (e) {
+			e.preventDefault();
+			submitComment(e.target);
+		});
+	};
 	`
 	buf := &bytes.Buffer{}
 	tmpl, err := template.New("tmpl").Parse(snippet)
@@ -102,7 +131,7 @@ func ServeWebsiteInsert(w http.ResponseWriter, r *http.Request) {
 		endpoint = "http://localhost:8080"
 	}
 
-	log.Printf("post ref is >%v<", postref)
+	log.Printf("serving js insert: post ref is >%v<", postref)
 	if postref == "" {
 		log.Println("{\"status\":\"error\",\"message\":\"postref must be provided\"}")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -117,5 +146,7 @@ func ServeWebsiteInsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 	io.WriteString(w, snippet)
 }
