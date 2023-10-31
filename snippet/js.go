@@ -50,6 +50,12 @@ func websiteInsert(post_ref string) (string, error) {
 
 		}
 
+		function insert_single_comment(comment) {
+			var ncc = document.getElementById("ncc");
+			elem = commentify(comment);
+			ncc.insertAdjacentElement('beforeend', elem);
+		}
+
 		function show_comments() {
 			var comment_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
 			var xmlHttp = new XMLHttpRequest();
@@ -68,8 +74,7 @@ func websiteInsert(post_ref string) (string, error) {
 				ncc.insertAdjacentElement('afterbegin', elem);
 				ncc.insertAdjacentHTML('beforeend', '<div class="ncc-banner">'+ comment_count +" " + pluralise_comments(comment_count) +'</div>');
 				for (let com = 0; com < comments.length ; com++) {
-					elem = commentify(comments[com]);
-					ncc.insertAdjacentElement('beforeend', elem);
+					insert_single_comment(comments[com])
 				}
 			}
 		}
@@ -88,12 +93,16 @@ func websiteInsert(post_ref string) (string, error) {
 				body: JSON.stringify(c),
 
 			});
+			c.id = '00';
+			insert_single_comment(c);
+			document.getElementById("submit_comment").reset()
 		}
+
 		function show_comment_form() {
 			var ncc = document.getElementById("ncc");
 			var form_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
 			var comment_form = '<form id="submit_comment">' +
-			'<div class="field" style="padding-bottom: 1em;"><label for="name" style="display: block;">Name</label><input type="text" size=30 name="name" /></div>' +
+			'<div class="field" style="padding-bottom: 1em;"><label for="display_name" style="display: block;">Name</label><input type="text" size=30 name="display_name" /></div>' +
 			'<div class="field" style="padding-bottom: 0.6em;"><label for="body" style="display: block;">Comment</label><textarea cols=45 rows=6 name="body" placeholder="Enter comment here…"></textarea></div>' +
 			'<div class="field" style="padding-bottom: 1em;"><input type="submit" value="submit" name="submit"></div>' +
 			'</form>';

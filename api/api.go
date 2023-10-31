@@ -41,7 +41,7 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comment := types.CommentEntry{DisplayName: (form_fields["name"]).(string), Body: (form_fields["body"]).(string), PostRef: params["postref"]}
+	comment := types.CommentEntry{DisplayName: (form_fields["display_name"]).(string), Body: (form_fields["body"]).(string), PostRef: params["postref"]}
 
 	lastInsertID, err := db.AddComment(comment)
 	if err != nil || lastInsertID == 0 {
