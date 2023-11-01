@@ -27,7 +27,7 @@ func SetupDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func GetPostComments(post_ref string) ([]types.CommentEntry, error) {
+func GetPostComments(post_ref string) ([]types.Comment, error) {
 	// TODO: check also for needs_moderation and approved flags
 	db, err := SetupDB()
 	if err != nil {
@@ -40,7 +40,7 @@ func GetPostComments(post_ref string) ([]types.CommentEntry, error) {
 		return nil, errors.New("Error reading from database")
 	}
 
-	var comments []types.CommentEntry
+	var comments []types.Comment
 
 	for rows.Next() {
 		var id int
@@ -54,7 +54,7 @@ func GetPostComments(post_ref string) ([]types.CommentEntry, error) {
 			log.Println(fmt.Sprintf("could not scan row: %v", err))
 			return nil, errors.New(fmt.Sprintf("Error parsing response from db: %v", err))
 		}
-		comments = append(comments, types.CommentEntry{Id: id, Body: body, DisplayName: display_name, PostRef: post_ref})
+		comments = append(comments, types.Comment{Id: id, Body: body, DisplayName: display_name, PostRef: post_ref})
 	}
 	return comments, nil
 }
@@ -80,7 +80,7 @@ func GetPostCommentCount(post_ref string) (int, error) {
 	return count, nil
 }
 
-func AddComment(comment types.CommentEntry) (int, error) {
+func AddComment(comment types.Comment) (int, error) {
 	db, err := SetupDB()
 	if err != nil {
 		return 0, errors.New(fmt.Sprintf("Could not set up db: %v", err))

@@ -41,7 +41,7 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comment := types.CommentEntry{DisplayName: (form_fields["display_name"]).(string), Body: (form_fields["body"]).(string), PostRef: params["postref"]}
+	comment := types.Comment{DisplayName: (form_fields["display_name"]).(string), Body: (form_fields["body"]).(string), PostRef: params["postref"]}
 
 	lastInsertID, err := db.AddComment(comment)
 	if err != nil || lastInsertID == 0 {
@@ -90,7 +90,6 @@ func GetPostComments(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode("{\"status\":\"error\",\"message\":\"Error saving to database\"}")
 		return
 	}
-	// comments := []types.CommentEntry{}
 	json_comments := []types.Comment{}
 
 	for _, dbcomment := range dbcomments {
