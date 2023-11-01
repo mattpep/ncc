@@ -5,4 +5,5 @@ type Comment struct {
 	DisplayName string `json:"display_name"`
 	Body        string `json:"body"`
 	PostRef     string `json:"post_ref,omitempty"`
+	DateTime    string `json:"date_time"`
 }

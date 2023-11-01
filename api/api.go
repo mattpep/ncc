@@ -93,8 +93,7 @@ func GetPostComments(w http.ResponseWriter, r *http.Request) {
 	json_comments := []types.Comment{}
 
 	for _, dbcomment := range dbcomments {
-		json_comment := types.Comment{Id: dbcomment.Id, DisplayName: dbcomment.DisplayName, Body: dbcomment.Body}
-		json_comments = append(json_comments, json_comment)
+		json_comments = append(json_comments, dbcomment)
 	}
 	var response = types.JsonResponse{Comments: json_comments, Count: len(json_comments)}
 
