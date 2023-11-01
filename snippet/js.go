@@ -207,6 +207,9 @@ function strptime(format, date) {
 			});
 			c.id = '00';
 			insert_single_comment(c);
+			var elem = document.getElementById("ncc-comment-00")
+			elem.setAttribute("style", elem.getAttribute("style") +"border: 1px dotted black;")
+			elem.scrollIntoView();
 			document.getElementById("submit_comment").reset()
 		}
 
