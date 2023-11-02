@@ -168,8 +168,15 @@ function strptime(format, date) {
 			ncc.insertAdjacentElement('beforeend', elem);
 		}
 
+		function postref_to_path(postref) {
+			if (postref == "") {
+				postref = window.location.pathname.replaceAll('/','-').substring(1);
+			}
+			return postref;
+		}
+
 		function show_comments() {
-			var comment_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
+			var comment_url = "{{ .Endpoint }}" + "/comments/" +  postref_to_path("{{ .PostRef }}");
 			var xmlHttp = new XMLHttpRequest();
 			xmlHttp.open( "GET", comment_url, false );
 			xmlHttp.send( null );
@@ -191,7 +198,7 @@ function strptime(format, date) {
 			}
 		}
 		function submitComment(form) {
-			var comment_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
+			var comment_url = "{{ .Endpoint }}" + "/comments/" +  postref_to_path("{{ .PostRef }}");
 			var commentData = new FormData(form);
 
 			var c = Object.fromEntries(commentData);
@@ -215,7 +222,7 @@ function strptime(format, date) {
 
 		function show_comment_form() {
 			var ncc = document.getElementById("ncc");
-			var form_url = "{{ .Endpoint }}" + "/comments/" +  "{{ .PostRef }}";
+			var form_url = "{{ .Endpoint }}" + "/comments/" +  postref_to_path("{{ .PostRef }}");
 			var comment_form = '<form id="submit_comment">' +
 			'<div class="field" style="padding-bottom: 1em;"><label for="display_name" style="display: block;">Name</label><input type="text" size=30 name="display_name" /></div>' +
 			'<div class="field" style="padding-bottom: 0.6em;"><label for="body" style="display: block;">Comment</label><textarea cols=45 rows=6 name="body" placeholder="Enter comment here…"></textarea></div>' +
@@ -255,13 +262,7 @@ func ServeWebsiteInsert(w http.ResponseWriter, r *http.Request) {
 		endpoint = "http://localhost:8080"
 	}
 
-	log.Printf("serving js insert: post ref is >%v<", postref)
-	if postref == "" {
-		log.Println("{\"status\":\"error\",\"message\":\"postref must be provided\"}")
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, "{\"status\":\"error\",\"message\":\"postref must be provided\"}")
-		return
-	}
+	// log.Printf("serving js insert: post ref is >%v<", postref)
 	snippet, err := websiteInsert(postref)
 	if err != nil {
 		log.Printf("Error: %v", err)
