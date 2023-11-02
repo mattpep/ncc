@@ -34,10 +34,10 @@ func setupTest(dbh *sql.DB, tb testing.TB) func(fb testing.TB) {
 	log.Println("set up a test")
 
 	sql := "INSERT INTO comments  (body, display_name, post_ref) VALUES($1, $2, $3) returning id"
-	_, err := dbh.Exec(sql, "comment_body", "dispname", "post_ref")
-	_, err = dbh.Exec(sql, "comment_body", "dispname", "post_ref")
-	_, err = dbh.Exec(sql, "comment_body", "dispname", "post_ref")
-	_, err = dbh.Exec(sql, "comment_body", "dispname", "otherpost")
+	_, err := dbh.Exec(sql, "comment_body 1", "dispname", "post_ref")
+	_, err = dbh.Exec(sql, "comment_body 2", "dispname", "post_ref")
+	_, err = dbh.Exec(sql, "comment_body 3", "dispname", "post_ref")
+	_, err = dbh.Exec(sql, "comment_body 4", "dispname", "otherpost")
 	if err != nil {
 		tb.Errorf("got error when seeding data: %s", err)
 	}
@@ -79,6 +79,18 @@ func TestGetPostComments(t *testing.T) {
 
 		if len(got) != 3 {
 			t.Errorf("got %v, wanted 3", len(got))
+		}
+	})
+	t.Run("posts returned in order", func(t *testing.T) {
+		sql := "UPDATE comments SET body = $1 WHERE body = $2"
+		_, err := dbh.Exec(sql, "updated body 1 (one)", "comment_body 1")
+		if err != nil {
+			t.Errorf("got error when trying to update a db record in a test: %v", err)
+		}
+		got, _ := GetPostComments("post_ref")
+
+		if got[0].Id > got[1].Id || got[1].Id > got[2].Id || got[0].Id > got[2].Id {
+			t.Errorf("Posts returned in unexpected order: %v", got)
 		}
 	})
 	t.Run("testing another post's comments", func(t *testing.T) {

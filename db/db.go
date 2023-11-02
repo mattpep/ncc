@@ -33,7 +33,7 @@ func GetPostComments(post_ref string) ([]types.Comment, error) {
 	if err != nil {
 		return nil, errors.New("Could not connect to database")
 	}
-	rows, err := db.Query("SELECT id, body, display_name, created_at FROM comments WHERE post_ref = $1", post_ref)
+	rows, err := db.Query("SELECT id, body, display_name, created_at FROM comments WHERE post_ref = $1 ORDER BY created_at ASC", post_ref)
 
 	if err != nil {
 		log.Println(fmt.Sprintf("could not read from db: %v", err))
