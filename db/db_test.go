@@ -57,7 +57,7 @@ func TestAddComment(t *testing.T) {
 	// teardown_test := setupTest(dbh, t)
 	// defer teardown_test(t)
 
-	comment := types.CommentEntry{DisplayName: "author", Body: "comment body here", PostRef: "test_post_ref"}
+	comment := types.Comment{DisplayName: "author", Body: "comment body here", PostRef: "test_post_ref"}
 
 	t.Run("Adding a comment", func(t *testing.T) {
 		got, _ := AddComment(comment)

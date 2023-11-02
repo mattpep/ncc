@@ -19,6 +19,7 @@ func runServer(port string) {
 	router.HandleFunc("/comments/{postref}", api.GetPostComments).Methods("GET")
 	router.HandleFunc("/commentcount/{postref}", api.GetPostCommentCount).Methods("GET")
 	router.HandleFunc("/comments/{postref}", api.AddComment).Methods("POST")
+	router.HandleFunc("/comments/{postref}", api.OptionsRequest).Methods("OPTIONS")
 	router.HandleFunc("/js/insert", snippet.ServeWebsiteInsert).Methods("GET")
 
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
