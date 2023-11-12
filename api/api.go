@@ -45,8 +45,9 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 
 	lastInsertID, err := db.AddComment(comment)
 	if err != nil || lastInsertID == 0 {
-		w.WriteHeader(http.StatusInternalServerError)
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Database error when storing comment"}`)
 
 		fmt.Println(fmt.Sprintf("Database error when writing: %v", err))
