@@ -87,8 +87,8 @@ func GetPostComments(w http.ResponseWriter, r *http.Request) {
 	dbcomments, err := db.GetPostComments(post_ref)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("Error saving comment to database: %v", err)
-		json.NewEncoder(w).Encode("{\"status\":\"error\",\"message\":\"Error saving to database\"}")
+		log.Printf("Error reading comments from database: %v", err)
+		io.WriteString(w, `{"status":"error","message":"Error reading comments from database"}`)
 		return
 	}
 	json_comments := []types.Comment{}
