@@ -152,7 +152,7 @@ var ncc = function(){
 
   function postref_to_path(postref) {
     if (postref == "") {
-      postref = window.location.pathname.replaceAll('/','-').substring(1);
+      postref = window.location.pathname.replaceAll('/','-').substring(1).slice(0,40);
     }
     return postref;
   }
