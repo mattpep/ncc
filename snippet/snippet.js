@@ -218,4 +218,4 @@ var ncc = function(){
     e.preventDefault();
     submitComment(e.target);
   });
-};
+};ncc();
