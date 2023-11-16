@@ -7,3 +7,8 @@ type Comment struct {
 	PostRef     string `json:"post_ref,omitempty"`
 	DateTime    string `json:"date_time"`
 }
+
+type JsonResponse struct {
+	Comments []Comment `json:comments`
+	Count    int       `json:count`
+}
