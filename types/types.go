@@ -12,3 +12,12 @@ type JsonResponse struct {
 	Comments []Comment `json:comments`
 	Count    int       `json:count`
 }
+
+type ModTask struct {
+	Id          int
+	DisplayName string
+	Body        string
+	PostRef     string
+	DateTime    string
+	Actor       string
+}

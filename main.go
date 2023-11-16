@@ -2,6 +2,7 @@ package main
 
 import "ncc/api"
 import "ncc/snippet"
+import "ncc/moderator"
 
 import (
 	"encoding/json"
@@ -19,6 +20,7 @@ func runServer(port string) {
 	router.HandleFunc("/comments/{postref}", api.GetPostComments).Methods("GET")
 	router.HandleFunc("/commentcount/{postref}", api.GetPostCommentCount).Methods("GET")
 	router.HandleFunc("/comments/{postref}", api.AddComment).Methods("POST")
+	router.HandleFunc("/flag/{comment_id}", api.FlagComment).Methods("POST")
 	router.HandleFunc("/comments/{postref}", api.OptionsRequest).Methods("OPTIONS")
 	router.HandleFunc("/js/insert", snippet.ServeWebsiteInsert).Methods("GET")
 
@@ -38,9 +40,23 @@ func runServer(port string) {
 }
 
 func main() {
-	port, present := os.LookupEnv("PORT")
-	if !present {
-		port = "8080"
+	if len(os.Args) > 1 {
+		if os.Args[1] == "modqueue" {
+			moderator.ShowTasks()
+		} else if os.Args[1] == "server" {
+			port, present := os.LookupEnv("PORT")
+			if !present {
+				port = "8080"
+			}
+			runServer(port)
+		} else {
+			fmt.Println("Unknown action")
+		}
+	} else {
+		port, present := os.LookupEnv("PORT")
+		if !present {
+			port = "8080"
+		}
+		runServer(port)
 	}
-	runServer(port)
 }

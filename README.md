@@ -3,9 +3,7 @@
 Users often hate cookies due to the pop-ups. This is a comment system designed
 to work without the use of cookies.
 
-
 It's very much an experiment, but you're welcome to use it if you want.
-
 
 # How it works
 
@@ -30,14 +28,20 @@ configuration. The possible settings are:
 * `EXT_ENDOINT` - the prefix of the public-facing URL of this service (i.e.
   outside of any loadbalancer or container which might be in use)
 
+# Moderation
+
+Moderation tasks can be viewed by running the binary with the parameter
+`modqueue`. You'll still need to provide the database location in the
+environment, with a command of the form
+
+```
+$ DATABASE_URL=postgres://ncc:password@localhost:5432/ncc ./ncc modqueue
+```
+
 # Some caveats
 
-Although this system does not generate, store, or make use of cookies for
-public users. it does still use cookies for website admins and moderators, in
-order that they can perform authenticated operations such as moderation.
-
-But of note, because personal names are still collected then GDPR and related
-legislation will still apply.
+Because personal names (albeit unverified) are still collected then GDPR and
+related legislation will still apply.
 
 Lastly, I am not a legal expert so you should not make inferences about your
 obligations based on the information I provide here.

@@ -27,13 +27,34 @@ func SetupDB() (*sql.DB, error) {
 	return db, nil
 }
 
+func FlagComment(comment_id int, ipaddr string) error {
+	db, err := SetupDB()
+	var action int
+	if err != nil {
+		return errors.New("Could not connect to database")
+	}
+	err = db.QueryRow("INSERT INTO moderation_actions (comment_id, action, date_time, actor) VALUES($1, 'flag', NOW(), $2) returning id", comment_id, ipaddr).Scan(&action)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Could not flag comment: %v", err))
+	}
+	return nil
+}
+
 func GetPostComments(post_ref string) ([]types.Comment, error) {
 	// TODO: check also for needs_moderation and approved flags
 	db, err := SetupDB()
 	if err != nil {
 		return nil, errors.New("Could not connect to database")
 	}
-	rows, err := db.Query("SELECT id, body, display_name, created_at FROM comments WHERE post_ref = $1 ORDER BY created_at ASC", post_ref)
+	rows, err := db.Query(`SELECT comments.id, comments.display_name, comments.body, comments.created_at
+                               FROM comments
+                               LEFT OUTER JOIN (
+                                        SELECT id, date_time, comment_id, action, ROW_NUMBER() OVER (PARTITION BY comment_id ORDER BY DATE_TIME DESC) recency
+                                        FROM moderation_actions) rma
+                               ON rma.comment_id = comments.id
+                               WHERE ((recency = 1 AND action='approve') OR recency IS NULL)
+				AND post_ref = $1
+			       ORDER BY created_at ASC`, post_ref)
 
 	if err != nil {
 		log.Println(fmt.Sprintf("could not read from db: %v", err))
@@ -61,17 +82,18 @@ func GetPostComments(post_ref string) ([]types.Comment, error) {
 }
 
 func GetPostCommentCount(post_ref string) (int, error) {
-	// TODO: check also for needs_moderation and approved flags
 	db, err := SetupDB()
 	if err != nil {
 		return 0, errors.New("Could not connect to database")
 	}
-	result := db.QueryRow("SELECT count(*) as c FROM comments WHERE post_ref = $1", post_ref)
-
-	if err != nil {
-		log.Println(fmt.Sprintf("could not read from db: %v", err))
-		return 0, errors.New("Error reading from database")
-	}
+	result := db.QueryRow(`SELECT COUNT(*) AS c
+                               FROM comments
+                               LEFT OUTER JOIN (
+                                        SELECT id, date_time, comment_id, action, ROW_NUMBER() OVER (PARTITION BY comment_id ORDER BY DATE_TIME DESC) recency
+                                        FROM moderation_actions) rma
+                               ON rma.comment_id = comments.id
+                               WHERE ((recency = 1 AND action='approve') OR recency IS NULL)
+				AND post_ref = $1`, post_ref)
 
 	var count int
 	err = result.Scan(&count)

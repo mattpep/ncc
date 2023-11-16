@@ -1,9 +1,35 @@
-var ncc = function(){
+function flagComment(comment_id) {
+  var comment_url = "{{ .Endpoint }}" + "/flag/" + comment_id;
+
+  var response = fetch(comment_url, {
+
+    method: "POST",
+    body: ""
+
+  }).then((response) => {
+    if (response.status == 204) {
+      console.log("flag ok")
+      var comment_el = document.querySelector("#ncc #ncc-comment-"+comment_id);
+      comment_el.innerHTML = '<span style="color: green; font-size: 0.6em;">Comment flagged</span>'
+      comment_el.scrollIntoView()
+
+    } else {
+      console.log("flag error")
+      var action_el = document.querySelector("#ncc #ncc-comment-"+comment_id + " div.actions form");
+      console.log(JSON.stringify(action_el))
+      action_el.insertAdjacentHTML('beforeend', '<span style="color: red; font-size: 0.6em;">Could not flag comment</span>');
+    }
+  }).catch((err) => {
+    console.log("Error: " + err)
+  })
+}
+
+document.addEventListener("DOMContentLoaded", function(){
   const author_style = "color: darkgray;";
   const body_style = "color: black;";
   const timestamp_style = "color: lightgray;padding-left: 1em;";
   const comment_style = "margin-bottom: 1.5em;"
-  // document.addEventListener("DOMContentLoaded", function(){
+  const action_style = "font-weight: bold; text-size: 0.8em;"
   function commentify(comment) {
     var elem = document.createElement("div");
     elem.id = "ncc-comment-" + comment.id;
@@ -27,7 +53,7 @@ var ncc = function(){
       var monthName = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dez");
 
       /* simulates some of the format strings of strptime() */
-      // This functiomn taken from https://www.lzone.de/examples/Javascript%20strptime, Copyright 2012 Lars Windolf <lars.windolf@gmx.de>
+      // This function taken from https://www.lzone.de/examples/Javascript%20strptime, Copyright 2012 Lars Windolf <lars.windolf@gmx.de>
       function strptime(format, date) {
         var last = -2;
         var result = "";
@@ -133,6 +159,10 @@ var ncc = function(){
 
     elem.insertAdjacentElement('beforeend', meta);
     elem.insertAdjacentElement('beforeend', combody);
+
+    var flag_url = "{{ .Endpoint }}" + "/flag/" +  comment.id;
+    var actions = '<div class="actions" style="' + action_style + '"><form id="flag-'+comment.id+'" method="post" action="' + flag_url + '"> <input type="hidden" name="name" value="value" /> <a href="#" onclick="event.preventDefault();flagComment(\''+comment.id+'\')">Flag</a> </form>'
+    elem.insertAdjacentHTML('beforeend', actions);
     return elem;
   }
 
@@ -218,4 +248,5 @@ var ncc = function(){
     e.preventDefault();
     submitComment(e.target);
   });
-};ncc();
+})
+

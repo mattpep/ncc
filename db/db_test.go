@@ -1,12 +1,15 @@
 package db
 
 import "ncc/types"
+
 import "testing"
 import "database/sql"
-import "log"
+
+// import "log"
 
 func setupSuite(tb testing.TB) (*sql.DB, func(tb testing.TB)) {
-	log.Println("setup test suite")
+	// log.Println("setup test suite")
+
 	dbh, err := SetupDB()
 	if err != nil {
 		tb.Errorf("got error when connecting to database: %s", err)
@@ -21,7 +24,7 @@ func setupSuite(tb testing.TB) (*sql.DB, func(tb testing.TB)) {
 	}
 
 	return dbh, func(tb testing.TB) {
-		log.Println("teardown test suite")
+		// log.Println("teardown test suite")
 		// _, err := dbh.Query("ROLLBACK")
 		// if err != nil {
 		// 	tb.Errorf("Could not rollback database during testing")
@@ -31,22 +34,28 @@ func setupSuite(tb testing.TB) (*sql.DB, func(tb testing.TB)) {
 }
 
 func setupTest(dbh *sql.DB, tb testing.TB) func(fb testing.TB) {
-	log.Println("set up a test")
-
+	// log.Println("set up a test")
 	sql := "INSERT INTO comments  (body, display_name, post_ref) VALUES($1, $2, $3) returning id"
-	_, err := dbh.Exec(sql, "comment_body 1", "dispname", "post_ref")
-	_, err = dbh.Exec(sql, "comment_body 2", "dispname", "post_ref")
-	_, err = dbh.Exec(sql, "comment_body 3", "dispname", "post_ref")
-	_, err = dbh.Exec(sql, "comment_body 4", "dispname", "otherpost")
-	if err != nil {
-		tb.Errorf("got error when seeding data: %s", err)
+
+	var test_comments = []types.Comment{
+		types.Comment{Body: "comment_body 1", DisplayName: "dispname", PostRef: "post_ref"},
+		types.Comment{Body: "comment_body 2", DisplayName: "dispname", PostRef: "post_ref"},
+		types.Comment{Body: "comment_body 3", DisplayName: "dispname", PostRef: "post_ref"},
+		types.Comment{Body: "comment_body 4", DisplayName: "dispname", PostRef: "otherpost"},
+	}
+
+	for _, c := range test_comments {
+		_, err := dbh.Exec(sql, c.Body, c.DisplayName, c.PostRef)
+		if err != nil {
+			tb.Errorf("got error when seeding data: %s", err)
+		}
 	}
 
 	return func(tb testing.TB) {
-		log.Println("tear down a test")
-		_, err := dbh.Query("TRUNCATE comments")
+		// log.Println("tear down a test")
+		_, err := dbh.Query("TRUNCATE comments CASCADE")
 		if err != nil {
-			tb.Errorf("Could not truncate test comments")
+			tb.Errorf("Could not truncate test comments: %v", err)
 		}
 	}
 }
@@ -64,6 +73,23 @@ func TestAddComment(t *testing.T) {
 
 		if got == 0 {
 			t.Errorf("got %v, wanted non-zero", got)
+		}
+	})
+}
+
+func TestFlagComment(t *testing.T) {
+	_, teardown := setupSuite(t)
+	defer teardown(t)
+
+	comment := types.Comment{DisplayName: "author", Body: "comment body here", PostRef: "test_post_ref"}
+	t.Run("Flagging a comment", func(t *testing.T) {
+		id, err := AddComment(comment)
+		if err != nil {
+			t.Errorf("Could not add comment: %v", err)
+		}
+		err = FlagComment(id, "0.0.0.0")
+		if err != nil {
+			t.Errorf("Could not flag comment: %v", err)
 		}
 	})
 }
@@ -101,6 +127,7 @@ func TestGetPostComments(t *testing.T) {
 		}
 	})
 }
+
 func TestGetPostCommentCount(t *testing.T) {
 	dbh, teardown := setupSuite(t)
 	defer teardown(t)
