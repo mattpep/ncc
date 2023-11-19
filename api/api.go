@@ -159,7 +159,7 @@ func GetPostComments(w http.ResponseWriter, r *http.Request) {
 	for _, dbcomment := range dbcomments {
 		json_comments = append(json_comments, dbcomment)
 	}
-	var response = types.JsonResponse{Comments: json_comments, Count: len(json_comments)}
+	var response = types.JsonResponse{Status: "ok", Comments: json_comments, Count: len(json_comments)}
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
