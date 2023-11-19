@@ -189,26 +189,35 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function show_comments() {
     var comment_url = "{{ .Endpoint }}" + "/comments/" +  postref_to_path("{{ .PostRef }}");
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", comment_url, false );
-    xmlHttp.send( null );
-    var comment_info = JSON.parse(xmlHttp.responseText);
-    var comments = comment_info["Comments"];
-    var comment_count = comment_info["Count"];
-    var ncc = document.getElementById("ncc");
-    if (null === ncc) {
-      console.log("ncc - could not find a div with id ncc")
-      return
-    }
-    else {
-      var elem = document.createElement("hr");
-      ncc.insertAdjacentElement('afterbegin', elem);
-      ncc.insertAdjacentHTML('beforeend', '<div class="ncc-banner">'+ comment_count +" " + pluralise_comments(comment_count) +'</div>');
-      for (let com = 0; com < comments.length ; com++) {
-        insert_single_comment(comments[com])
+    var response = fetch(comment_url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
       }
-    }
+    }).then((response) => {
+      if (response.status != 200) {
+        console.log("Unexpected status when getting comments count: " + response.status)
+        return
+      }
+    }).then((comment_info) => {
+      var comments = comment_info["Comments"];
+      var comment_count = comment_info["Count"];
+      var ncc = document.getElementById("ncc");
+      if (null === ncc) {
+        console.log("ncc - could not find a div with id ncc")
+        return
+      }
+      else {
+        var elem = document.createElement("hr");
+        ncc.insertAdjacentElement('afterbegin', elem);
+        ncc.insertAdjacentHTML('beforeend', '<div class="ncc-banner">'+ comment_count +" " + pluralise_comments(comment_count) +'</div>');
+        for (let com = 0; com < comments.length ; com++) {
+          insert_single_comment(comments[com])
+        }
+      }
+    })
   }
+
   function submitComment(form) {
     var comment_url = "{{ .Endpoint }}" + "/comments/" +  postref_to_path("{{ .PostRef }}");
     var commentData = new FormData(form);
