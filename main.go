@@ -1,7 +1,6 @@
 package main
 
 import "ncc/api"
-import "ncc/snippet"
 import "ncc/moderator"
 
 import (
@@ -19,10 +18,12 @@ func runServer(port string) {
 
 	router.HandleFunc("/comments/{postref}", api.GetPostComments).Methods("GET")
 	router.HandleFunc("/commentcount/{postref}", api.GetPostCommentCount).Methods("GET")
+	router.HandleFunc("/commentcount/{postref}", api.OptionsRequest).Methods("OPTIONS")
 	router.HandleFunc("/comments/{postref}", api.AddComment).Methods("POST")
 	router.HandleFunc("/flag/{comment_id}", api.FlagComment).Methods("POST")
 	router.HandleFunc("/comments/{postref}", api.OptionsRequest).Methods("OPTIONS")
-	router.HandleFunc("/js/insert", snippet.ServeWebsiteInsert).Methods("GET")
+	router.HandleFunc("/js/insert/form", FormInsert).Methods("GET")
+	router.HandleFunc("/js/insert/counts", CountInsert).Methods("GET")
 
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusNotFound)

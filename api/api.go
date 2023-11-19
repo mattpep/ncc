@@ -15,7 +15,6 @@ import (
 )
 
 func OptionsRequest(w http.ResponseWriter, r *http.Request) {
-	log.Println("Handling OPTIONS request")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -74,7 +73,6 @@ func FlagComment(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, `{"status":"error","message":"Database error when flagging comment"}`)
 		log.Printf("Database error when flagging comment %d: %v", comment_id, err)
 	} else {
-		fmt.Println(fmt.Sprintf("Flagged comment %d", comment_id))
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		// we need to set the status header _after_ the other headers
@@ -140,6 +138,7 @@ func GetPostCommentCount(w http.ResponseWriter, r *http.Request) {
 		Status: "ok",
 		Count:  count,
 	}
+	// fmt.Printf("GetPostCommentCount: returning a count of %d\n", response.Count)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 	json.NewEncoder(w).Encode(response)
