@@ -9,9 +9,9 @@ type Comment struct {
 }
 
 type JsonResponse struct {
-	Status   string    `json:status`
-	Comments []Comment `json:comments`
-	Count    int       `json:count`
+	Status   string    `json:"status"`
+	Comments []Comment `json:"comments"`
+	Count    int       `json:"count"`
 }
 
 type ModTask struct {
