@@ -224,13 +224,25 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       body: JSON.stringify(c)
 
+    }).then((response) => {
+      if (response.status !== 204) {
+        document.querySelector('#ncc .error').innerHTML = 'ERROR'
+        return
+      }
+      document.querySelector('#ncc .error').innerHTML = ''
+      c.id = '00'
+      insertSingleComment(c)
+      const elem = document.getElementById('ncc-comment-00')
+      elem.setAttribute('style', elem.getAttribute('style') + 'border: 1px dotted black;')
+      elem.scrollIntoView()
+      document.getElementById('submit_comment').reset()
+    }).catch(function (err) {
+      if (err instanceof TypeError) {
+        document.querySelector('#ncc .error').innerHTML = 'ERROR - Is ncc offline?'
+      } else {
+        document.querySelector('#ncc .error').innerHTML = 'Unknown error'
+      }
     })
-    c.id = '00'
-    insertSingleComment(c)
-    const elem = document.getElementById('ncc-comment-00')
-    elem.setAttribute('style', elem.getAttribute('style') + 'border: 1px dotted black;')
-    elem.scrollIntoView()
-    document.getElementById('submit_comment').reset()
   }
 
   function showCommentForm () {
@@ -238,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const commentForm = '<form id="submit_comment">' +
       '<div class="field" style="padding-bottom: 1em;"><label for="display_name" style="display: block;">Name</label><input type="text" size=30 name="display_name" /></div>' +
       '<div class="field" style="padding-bottom: 0.6em;"><label for="body" style="display: block;">Comment</label><textarea cols=45 rows=6 name="body" placeholder="Enter comment here…"></textarea></div>' +
-      '<div class="field" style="padding-bottom: 1em;"><input type="submit" value="submit" name="submit"></div>' +
+      '<div class="field" style="padding-bottom: 1em;"><input type="submit" value="submit" name="submit"><span class="error" style="color: red; text-size: 0.6em"></span></div>' +
       '</form>'
     ncc.insertAdjacentHTML('beforeend', commentForm)
   }
