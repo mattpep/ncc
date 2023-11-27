@@ -83,6 +83,7 @@ func FlagComment(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Takes a JSON submission, not x-urlencoded
 func AddComment(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	// check the parent post exists (404? 400?)
