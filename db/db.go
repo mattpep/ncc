@@ -29,6 +29,7 @@ func SetupDB() (*sql.DB, error) {
 
 func FlagComment(comment_id int, ipaddr string) error {
 	db, err := SetupDB()
+	defer db.Close()
 	var action int
 	if err != nil {
 		return errors.New("Could not connect to database")
@@ -43,6 +44,7 @@ func FlagComment(comment_id int, ipaddr string) error {
 func GetPostComments(post_ref string) ([]types.Comment, error) {
 	// TODO: check also for needs_moderation and approved flags
 	db, err := SetupDB()
+	defer db.Close()
 	if err != nil {
 		return nil, errors.New("Could not connect to database")
 	}
@@ -83,6 +85,7 @@ func GetPostComments(post_ref string) ([]types.Comment, error) {
 
 func GetPostCommentCount(post_ref string) (int, error) {
 	db, err := SetupDB()
+	defer db.Close()
 	if err != nil {
 		return 0, errors.New("Could not connect to database")
 	}
@@ -105,6 +108,7 @@ func GetPostCommentCount(post_ref string) (int, error) {
 
 func AddComment(comment types.Comment) (int, error) {
 	db, err := SetupDB()
+	defer db.Close()
 	if err != nil {
 		return 0, errors.New(fmt.Sprintf("Could not set up db: %v", err))
 	}
