@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"net/http"
+	"runtime/debug"
 )
 
 func runServer(port string) {
@@ -50,6 +51,16 @@ func main() {
 				port = "8080"
 			}
 			runServer(port)
+		} else if os.Args[1] == "version" {
+			if info, ok := debug.ReadBuildInfo(); ok {
+				for _, setting := range info.Settings {
+					if setting.Key == "vcs.revision" {
+						fmt.Printf("Version: %s\n", setting.Value)
+					}
+				}
+			} else {
+				fmt.Println("Unknown version. Not built from a git repo?")
+			}
 		} else {
 			fmt.Println("Unknown action")
 		}
