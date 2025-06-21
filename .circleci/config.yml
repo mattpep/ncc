@@ -1,0 +1,139 @@
+---
+version: 2.1
+orbs:
+  gh: circleci/github-cli@2.6
+jobs:
+  lint-and-test:
+    # Install go modules and run tests
+    docker:
+      - image: cimg/go:1.20
+        environment:
+          DATABASE_URL: postgres://user@dbhost:5432/database?sslmode=disable
+      - image: cimg/postgres:17.5
+        name: dbhost
+        environment:
+          POSTGRES_USER: user
+          POSTGRES_DB: database
+    steps:
+      - checkout
+      - run:
+          name: Run linting checks
+          command: |
+            echo "Report any files in need of formatting (expecting no ouput hereafter)"
+            gofmt -s -l .
+            if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+      - restore_cache:
+          key: go-mod-{{ checksum "go.sum" }}
+      - run:
+          name: Download Go modules
+          command: go mod download
+      - run:
+          name: Print go mod help instructions
+          command: "echo \"go mod download will fail if you have private repositories \nOne way to fix this for private go modules that are hosted in github:\n  1. Add a GITHUB_TOKEN and GITHUB_USER to an org context. Please refer to https://circleci.com/docs/contexts/ for more informaiton on how to use contexts.\n  2. Add a .circleci/config.yml to your repository or use this config.yml as a starting template\n  3. Configure the jobs to use the newly created context which includes GITHUB_TOKEN and GITHUB_USER  \n  4. Before downloading the modules you will need to add a step to execute \\\"go env -w GOPRIVATE=github.com/<OrgNameHere>\\\". \n\tThis allows go mod to install private repos under OrgNameHere.\n  5. You will also need to run \\\"git config --global url.\\\"https://$GITHUB_USER:$GITHUB_TOKEN@github.com/<OrgNameHere>/\\\".insteadOf \\\"https://github.com/<OrgNameHere>/\\\"\\\"\n  6. Finally include the \\\"go mod download\\\" it should be able to fetch your private libraries now. \nFor gitlab private go modules, follow the same instructions as above but include your GITLAB_TOKEN and GITLAB_USER.\nThen use gitlab.com instead of github.com in steps 4 and 5.\nSee https://go.dev/ref/mod#private-modules for more details.\""
+          when: on_fail
+      - save_cache:
+          key: go-mod-{{ checksum "go.sum" }}
+          paths:
+            - /home/circleci/go/pkg/mod
+      - run:
+          name: Run migrations
+          command: |
+            wget -O go-migrate.deb https://github.com/golang-migrate/migrate/releases/download/v4.18.3/migrate.linux-amd64.deb
+            ls -l go-migrate.deb
+            sudo dpkg -i go-migrate.deb
+            migrate -path /home/circleci/project/db/migrations -database ${DATABASE_URL} up
+      - run:
+          name: Run tests
+          command: gotestsum --junitfile junit.xml
+      - store_test_results:
+          path: junit.xml
+  build:
+    docker:
+      - image: cimg/go:1.20
+    steps:
+      - checkout
+      - restore_cache:
+          key: go-mod-{{ checksum "go.sum" }}
+      - run:
+          name: Download Go modules
+          command: go mod download
+      - run:
+          name: Print go mod help instructions
+          command: "echo \"go mod download will fail if you have private repositories \nOne way to fix this for private go modules that are hosted in github:\n  1. Add a GITHUB_TOKEN and GITHUB_USER to an org context. Please refer to https://circleci.com/docs/contexts/ for more informaiton on how to use contexts.\n  2. Add a .circleci/config.yml to your repository or use this config.yml as a starting template\n  3. Configure the jobs to use the newly created context which includes GITHUB_TOKEN and GITHUB_USER  \n  4. Before downloading the modules you will need to add a step to execute \\\"go env -w GOPRIVATE=github.com/<OrgNameHere>\\\". \n\tThis allows go mod to install private repos under OrgNameHere.\n  5. You will also need to run \\\"git config --global url.\\\"https://$GITHUB_USER:$GITHUB_TOKEN@github.com/<OrgNameHere>/\\\".insteadOf \\\"https://github.com/<OrgNameHere>/\\\"\\\"\n  6. Finally include the \\\"go mod download\\\" it should be able to fetch your private libraries now. \nFor gitlab private go modules, follow the same instructions as above but include your GITLAB_TOKEN and GITLAB_USER.\nThen use gitlab.com instead of github.com in steps 4 and 5.\nSee https://go.dev/ref/mod#private-modules for more details.\""
+          when: on_fail
+      - save_cache:
+          key: go-mod-{{ checksum "go.sum" }}
+          paths:
+            - /home/circleci/go/pkg/mod
+      - run:
+          name: Create the ~/artifacts directory if it doesn't exist
+          command: mkdir -p ~/artifacts
+      - run:
+          name: Build executables
+          command: go build -o ~/artifacts ./...
+      - persist_to_workspace:
+          root: ~/artifacts
+          paths:
+            - ncc
+  make-release:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/artifacts
+      - gh/install
+      - run:
+          name: Make release
+          command: gh release create << pipeline.git.tag >>  --notes "CI generated release" /tmp/artifacts/ncc
+
+ #     destination: executables
+  deploy:
+   # Assumptions:
+    # * The web server (plus any relevant SSL configuration) is in place
+    # * The systemd service unit file to run the service is in place
+    docker:
+      - image: python:3.11
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/artifacts
+      - add_ssh_keys:
+          fingerprints:
+            - "43:ba:be:b2:fd:7f:57:58:d3:77:ac:ec:1b:47:e2:52"
+
+      - run:
+          name: deploy the binary
+          command: |
+            python3 -m venv env
+            . env/bin/activate
+            pip install ansible
+            cd deploy
+            ansible-playbook -i ${DEPLOY_HOST}, -u ${DEPLOY_USER} deploy.yml
+
+workflows:
+  build:
+    jobs:
+      - lint-and-test:
+          filters: &all
+            tags:
+              only: /.*/
+            branches:
+              only: /.*/
+      - build:
+          requires:
+            - lint-and-test
+          filters: *all
+      - deploy:
+          requires:
+            - build
+          context: [ ncc-deploy ]
+      - make-release:
+          requires:
+            - deploy
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+          context: [ github-ncc-release ]

@@ -1,0 +1,22 @@
+---
+- name: Deploy
+  hosts: all
+  become: true
+  tasks:
+    - name: Stop ncc
+      ansible.builtin.service:
+        name: ncc
+        state: stopped
+
+    - name: Replace binary
+      ansible.builtin.copy:
+        dest: /usr/local/bin/ncc
+        src: /tmp/artifacts/ncc
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Start lurl
+      ansible.builtin.service:
+        name: ncc
+        state: started
