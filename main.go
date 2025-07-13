@@ -5,6 +5,7 @@ import "ncc/moderator"
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -37,8 +38,26 @@ func runServer(port string) {
 	// serve the app
 	fmt.Println("ncc - no cookies comment system")
 	fmt.Println("Copyright 2023 by Matt Peperell")
+	version, err := getVCSVersion()
+	if err != nil {
+		fmt.Println("Could not determine version: Not built from a git repo?")
+	} else {
+		fmt.Printf("Git version: %s\n", version)
+	}
 	fmt.Printf("Server running at %s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
+}
+
+func getVCSVersion() (string, error) {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.revision" {
+				return setting.Value, nil
+			}
+		}
+	}
+	return "", errors.New("Unknown version. Not built from a git repo?")
+
 }
 
 func main() {
@@ -52,14 +71,11 @@ func main() {
 			}
 			runServer(port)
 		} else if os.Args[1] == "version" {
-			if info, ok := debug.ReadBuildInfo(); ok {
-				for _, setting := range info.Settings {
-					if setting.Key == "vcs.revision" {
-						fmt.Printf("Version: %s\n", setting.Value)
-					}
-				}
+			version, err := getVCSVersion()
+			if err != nil {
+				fmt.Println("Not built from a git repo?")
 			} else {
-				fmt.Println("Unknown version. Not built from a git repo?")
+				fmt.Printf("Git version: %s\n", version)
 			}
 		} else {
 			fmt.Println("Unknown action")
