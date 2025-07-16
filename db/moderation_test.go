@@ -8,16 +8,17 @@ import (
 )
 
 func setupModerationTest(dbh *sql.DB, tb testing.TB) func(fb testing.TB) {
-	sql := "INSERT INTO comments  (body, display_name, post_ref) VALUES($1, $2, $3) returning id"
 	var id = 0
-	err := dbh.QueryRow(sql, "comment_body 1", "dispname", "post_ref").Scan(&id)
+
+	sql := "INSERT INTO comments (body, display_name, post_ref, blog) VALUES($1, $2, $3, $4) returning id"
+	err := dbh.QueryRow(sql, "comment_body 1", "dispname", "post_ref", "testsite").Scan(&id)
 	if err != nil {
 		tb.Errorf("got error when seeding data: %s", err)
 	}
-	log.Println(fmt.Printf("inserted a comment with ID %d", id))
+	log.Println(fmt.Sprintf("Test comment for moderation has ID %d", id))
 	var test_data = []string{"comment_body_2", "comment_body_3", "comment_body_4"}
 	for _, t := range test_data {
-		_, err = dbh.Exec(sql, t, "dispname", "post_ref")
+		_, err = dbh.Exec(sql, t, "dispname", "post_ref", "testsite")
 		if err != nil {
 			tb.Errorf("got error when seeding data: %s", err)
 		}
@@ -30,9 +31,9 @@ func setupModerationTest(dbh *sql.DB, tb testing.TB) func(fb testing.TB) {
 	}
 
 	return func(tb testing.TB) {
-		_, err := dbh.Query("TRUNCATE comments CASCADE")
+		_, err := dbh.Query("TRUNCATE blogs CASCADE")
 		if err != nil {
-			tb.Errorf("Could not truncate test comments: %v", err)
+			tb.Errorf("Could not truncate test data: %v", err)
 		}
 	}
 }
@@ -75,13 +76,13 @@ func TestDeleteComment(t *testing.T) {
 	teardown_test := setupModerationTest(dbh, t)
 	defer teardown_test(t)
 
-	pre_del_comments, _ := GetPostComments("post_ref")
+	pre_del_comments, _ := GetPostComments("testsite", "post_ref")
 	err := DeleteComment(pre_del_comments[2].Id)
 
 	if err != nil {
 		t.Errorf("Could not delete comment: %v", err)
 	}
-	after_del_comments, _ := GetPostComments("post_ref")
+	after_del_comments, _ := GetPostComments("testsite", "post_ref")
 
 	// 4 comments of which 1 is flagged and 1 is deleted = 2 comments visible
 	if len(after_del_comments) != 2 {
