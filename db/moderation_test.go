@@ -1,8 +1,11 @@
 package db
 
-import "testing"
-import "database/sql"
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	"testing"
+)
 
 func setupModerationTest(dbh *sql.DB, tb testing.TB) func(fb testing.TB) {
 	sql := "INSERT INTO comments  (body, display_name, post_ref) VALUES($1, $2, $3) returning id"
@@ -11,7 +14,7 @@ func setupModerationTest(dbh *sql.DB, tb testing.TB) func(fb testing.TB) {
 	if err != nil {
 		tb.Errorf("got error when seeding data: %s", err)
 	}
-	fmt.Printf("inserted a comment with ID %d\n", id)
+	log.Println(fmt.Printf("inserted a comment with ID %d", id))
 	var test_data = []string{"comment_body_2", "comment_body_3", "comment_body_4"}
 	for _, t := range test_data {
 		_, err = dbh.Exec(sql, t, "dispname", "post_ref")

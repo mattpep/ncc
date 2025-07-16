@@ -48,7 +48,7 @@ func FlagComment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Error parsing POST request"}`)
-		log.Printf("Could not parse POST request: %v", err)
+		log.Println(fmt.Sprintf("Could not parse POST request: %v", err))
 		return
 	}
 
@@ -58,7 +58,7 @@ func FlagComment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Error getting commentid when flagging"}`)
-		log.Printf("Error getting commentid when flagging: %v", err)
+		log.Println(fmt.Sprintf("Error getting commentid when flagging: %v", err))
 		return
 	}
 	// check the parent post exists (404? 400?)
@@ -71,7 +71,7 @@ func FlagComment(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Database error when flagging comment"}`)
-		log.Printf("Database error when flagging comment %d: %v", comment_id, err)
+		log.Println(fmt.Sprintf("Database error when flagging comment %d: %v", comment_id, err))
 	} else {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
@@ -100,7 +100,7 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Error parsing JSON"}`)
-		fmt.Println(fmt.Sprintf("Error parsing JSON: %v", err))
+		log.Println(fmt.Sprintf("Error parsing JSON: %v", err))
 		return
 	}
 
@@ -113,9 +113,9 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Database error when storing comment"}`)
 
-		fmt.Println(fmt.Sprintf("Database error when writing: %v", err))
+		log.Println(fmt.Sprintf("Database error when writing: %v", err))
 	} else {
-		fmt.Println(fmt.Sprintf("Created record %d", lastInsertID))
+		log.Println(fmt.Sprintf("Created record %d", lastInsertID))
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		// we need to set the status header _after_ the other headers
@@ -151,7 +151,7 @@ func GetPostComments(w http.ResponseWriter, r *http.Request) {
 	dbcomments, err := db.GetPostComments(post_ref)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("Error reading comments from database: %v", err)
+		log.Println(fmt.Sprintf("Error reading comments from database: %v", err))
 		io.WriteString(w, `{"status":"error","message":"Error reading comments from database"}`)
 		return
 	}
