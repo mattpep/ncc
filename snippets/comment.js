@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function showComments () {
-    const commentURL = '{{ .Endpoint }}' + '/comments/' + urlToPostref('{{ .PostRef }}')
+    const commentURL = '{{ .Endpoint }}' + '/v2/blog/{{ .BlogRef }}/comments/' + urlToPostref('{{ .PostRef }}')
     fetch(commentURL, {
       method: 'GET',
       headers: {
@@ -211,7 +211,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function submitComment (form) {
-    const commentURL = '{{ .Endpoint }}' + '/comments/' + urlToPostref('{{ .PostRef }}')
+    const commentURL = '{{ .Endpoint }}' + '/v2/blog/{{ .BlogRef }}/comments/' + urlToPostref('{{ .PostRef }}')
+    console.log("Submitting a comment to " + commentURL)
     const commentData = new FormData(form)
 
     const c = Object.fromEntries(commentData)
@@ -226,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }).then((response) => {
       if (response.status !== 204) {
-        document.querySelector('#ncc .error').innerHTML = 'ERROR'
+        document.querySelector('#ncc .error').innerHTML = 'ERROR' + response.status
         return
       }
       document.querySelector('#ncc .error').innerHTML = ''
@@ -246,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function showCommentForm () {
+	  console.log("Generating the comment form?")
     const ncc = document.getElementById('ncc')
     const commentForm = '<form id="submit_comment">' +
       '<div class="field" style="padding-bottom: 1em;"><label for="display_name" style="display: block;">Name</label><input type="text" size=30 name="display_name" /></div>' +

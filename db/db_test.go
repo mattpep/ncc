@@ -5,7 +5,7 @@ import "ncc/types"
 import "testing"
 import "database/sql"
 
-// import "log"
+import "log"
 
 func setupSuite(tb testing.TB) (*sql.DB, func(tb testing.TB)) {
 	// log.Println("setup test suite")
@@ -18,34 +18,39 @@ func setupSuite(tb testing.TB) (*sql.DB, func(tb testing.TB)) {
 	// if err != nil {
 	// 	tb.Errorf("Could not open transaction during testing")
 	// }
+	_, err = CreateBlog("testsite")
 
 	if err != nil {
 		tb.Errorf("got error when connecting to database: %s", err)
 	}
 
 	return dbh, func(tb testing.TB) {
-		// log.Println("teardown test suite")
-		// _, err := dbh.Query("ROLLBACK")
-		// if err != nil {
-		// 	tb.Errorf("Could not rollback database during testing")
-		// }
-
+		log.Println("DB: teardown test suite")
+		_, err := dbh.Query("TRUNCATE blogs CASCADE")
+		if err != nil {
+			tb.Errorf("Could not rollback database during testing")
+		}
 	}
 }
 
 func setupTest(dbh *sql.DB, tb testing.TB) func(fb testing.TB) {
 	// log.Println("set up a test")
-	sql := "INSERT INTO comments  (body, display_name, post_ref) VALUES($1, $2, $3) returning id"
+	// _, err := dbh.Exec("INSERT INTO blogs (ref) VALUES ('testsite')")
+	// if err != nil {
+	// 	tb.Errorf("got error when seeding data: %s", err)
+	// }
+
+	sql := "INSERT INTO comments (body, display_name, post_ref, blog) VALUES($1, $2, $3, $4) returning id"
 
 	var test_comments = []types.Comment{
-		types.Comment{Body: "comment_body 1", DisplayName: "dispname", PostRef: "post_ref"},
-		types.Comment{Body: "comment_body 2", DisplayName: "dispname", PostRef: "post_ref"},
-		types.Comment{Body: "comment_body 3", DisplayName: "dispname", PostRef: "post_ref"},
-		types.Comment{Body: "comment_body 4", DisplayName: "dispname", PostRef: "otherpost"},
+		{Body: "comment_body 1", DisplayName: "dispname", PostRef: "post_ref", BlogRef: "testsite"},
+		{Body: "comment_body 2", DisplayName: "dispname", PostRef: "post_ref", BlogRef: "testsite"},
+		{Body: "comment_body 3", DisplayName: "dispname", PostRef: "post_ref", BlogRef: "testsite"},
+		{Body: "comment_body 4", DisplayName: "dispname", PostRef: "otherpost", BlogRef: "testsite"},
 	}
 
 	for _, c := range test_comments {
-		_, err := dbh.Exec(sql, c.Body, c.DisplayName, c.PostRef)
+		_, err := dbh.Exec(sql, c.Body, c.DisplayName, c.PostRef, c.BlogRef)
 		if err != nil {
 			tb.Errorf("got error when seeding data: %s", err)
 		}
@@ -57,6 +62,10 @@ func setupTest(dbh *sql.DB, tb testing.TB) func(fb testing.TB) {
 		if err != nil {
 			tb.Errorf("Could not truncate test comments: %v", err)
 		}
+		_, err = dbh.Query("TRUNCATE blogs CASCADE")
+		if err != nil {
+			tb.Errorf("Could not truncate test blogs: %v", err)
+		}
 	}
 }
 
@@ -66,13 +75,13 @@ func TestAddComment(t *testing.T) {
 	// teardown_test := setupTest(dbh, t)
 	// defer teardown_test(t)
 
-	comment := types.Comment{DisplayName: "author", Body: "comment body here", PostRef: "test_post_ref"}
+	comment := types.Comment{DisplayName: "author", Body: "comment body here", PostRef: "test_post_ref", BlogRef: "testsite"}
 
 	t.Run("Adding a comment", func(t *testing.T) {
 		got, _ := AddComment(comment)
 
 		if got == 0 {
-			t.Errorf("got %v, wanted non-zero", got)
+			t.Errorf("got 0, wanted non-zero")
 		}
 	})
 }
@@ -81,7 +90,7 @@ func TestFlagComment(t *testing.T) {
 	_, teardown := setupSuite(t)
 	defer teardown(t)
 
-	comment := types.Comment{DisplayName: "author", Body: "comment body here", PostRef: "test_post_ref"}
+	comment := types.Comment{DisplayName: "author", Body: "comment body here", PostRef: "test_post_ref", BlogRef: "testsite"}
 	t.Run("Flagging a comment", func(t *testing.T) {
 		id, err := AddComment(comment)
 		if err != nil {
@@ -101,7 +110,7 @@ func TestGetPostComments(t *testing.T) {
 	defer teardown_test(t)
 
 	t.Run("testing one post's comments", func(t *testing.T) {
-		got, _ := GetPostComments("post_ref")
+		got, _ := GetPostComments("testsite", "post_ref")
 
 		if len(got) != 3 {
 			t.Errorf("got %v, wanted 3", len(got))
@@ -113,14 +122,14 @@ func TestGetPostComments(t *testing.T) {
 		if err != nil {
 			t.Errorf("got error when trying to update a db record in a test: %v", err)
 		}
-		got, _ := GetPostComments("post_ref")
+		got, _ := GetPostComments("testsite", "post_ref")
 
 		if got[0].Id > got[1].Id || got[1].Id > got[2].Id || got[0].Id > got[2].Id {
 			t.Errorf("Posts returned in unexpected order: %v", got)
 		}
 	})
 	t.Run("testing another post's comments", func(t *testing.T) {
-		got, _ := GetPostComments("otherpost")
+		got, _ := GetPostComments("testsite", "otherpost")
 
 		if len(got) != 1 {
 			t.Errorf("got %v, wanted 1", len(got))

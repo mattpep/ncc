@@ -86,6 +86,7 @@ func FlagComment(w http.ResponseWriter, r *http.Request) {
 // Takes a JSON submission, not x-urlencoded
 func AddComment(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
+	log.Println(fmt.Sprintf("API/AddComment: Params are: %v", params))
 	// check the parent post exists (404? 400?)
 	// check post is not locked (and/or that comments are allowed on this post) - 403 if locked
 	var form_fields map[string]interface{}
@@ -100,11 +101,12 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Error parsing JSON"}`)
-		log.Println(fmt.Sprintf("Error parsing JSON: %v", err))
+		log.Println(fmt.Sprintf("API/AddComment: Error parsing JSON: %v", err))
 		return
 	}
 
-	comment := types.Comment{DisplayName: (form_fields["display_name"]).(string), Body: (form_fields["body"]).(string), PostRef: params["postref"]}
+	comment := types.Comment{DisplayName: (form_fields["display_name"]).(string), Body: (form_fields["body"]).(string), PostRef: params["postref"], BlogRef: params["blogref"]}
+	log.Println(fmt.Sprintf("API/AddComment: Going to save: %v", comment))
 
 	lastInsertID, err := db.AddComment(comment)
 	if err != nil || lastInsertID == 0 {
@@ -113,9 +115,9 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Database error when storing comment"}`)
 
-		log.Println(fmt.Sprintf("Database error when writing: %v", err))
+		log.Println(fmt.Sprintf("API/AddComment: Database error when writing: %v", err))
 	} else {
-		log.Println(fmt.Sprintf("Created record %d", lastInsertID))
+		log.Println(fmt.Sprintf("API/AddComment: Created record %d", lastInsertID))
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		// we need to set the status header _after_ the other headers
@@ -126,20 +128,16 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetPostCommentCount(w http.ResponseWriter, r *http.Request) {
+func GetBlogCommentCounts(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	post_ref := params["postref"]
-	count, _ := db.GetPostCommentCount(post_ref)
+	blog_ref := params["blogref"]
+	counts, _ := db.GetBlogCommentCounts(blog_ref)
 
-	type countresponse struct {
-		Status string `json:"status"`
-		Count  int    `json:"count"`
+	response := types.BlogCommentCounts{
+		Status:    "ok",
+		CountInfo: counts,
 	}
-	response := countresponse{
-		Status: "ok",
-		Count:  count,
-	}
-	// fmt.Printf("GetPostCommentCount: returning a count of %d\n", response.Count)
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 	json.NewEncoder(w).Encode(response)
@@ -148,7 +146,8 @@ func GetPostCommentCount(w http.ResponseWriter, r *http.Request) {
 func GetPostComments(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	post_ref := params["postref"]
-	dbcomments, err := db.GetPostComments(post_ref)
+	blog_ref := params["blogref"]
+	dbcomments, err := db.GetPostComments(blog_ref, post_ref)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println(fmt.Sprintf("Error reading comments from database: %v", err))
