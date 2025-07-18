@@ -10,6 +10,7 @@ import "ncc/types"
 func GetModerationTasks() ([]types.ModTask, error) {
 	// gets a list of comments for which the most recent action is a flagging
 	db, err := SetupDB()
+	defer db.Close()
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not set up db: %v", err))
 	}
@@ -51,6 +52,7 @@ func GetModerationTasks() ([]types.ModTask, error) {
 func ApproveComment(comment_id int) error {
 	var action int
 	db, err := SetupDB()
+	defer db.Close()
 	if err != nil {
 		return errors.New("Could not connect to database")
 	}
@@ -62,6 +64,7 @@ func ApproveComment(comment_id int) error {
 }
 func DeleteComment(comment_id int) error {
 	db, err := SetupDB()
+	defer db.Close()
 	if err != nil {
 		return errors.New("Could not connect to database")
 	}
