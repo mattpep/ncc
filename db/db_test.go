@@ -30,6 +30,7 @@ func setupSuite(tb testing.TB) (*sql.DB, func(tb testing.TB)) {
 		if err != nil {
 			tb.Errorf("Could not rollback database during testing")
 		}
+		dbh.Close()
 	}
 }
 
