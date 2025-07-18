@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/gorilla/mux"
 	"io"
 	"log"
 	"net/http"
@@ -14,6 +16,7 @@ import (
 type templateParams struct {
 	Endpoint string
 	PostRef  string
+	BlogRef  string
 }
 
 var endpoint string
@@ -24,14 +27,14 @@ var comment_snippet string
 //go:embed snippets/count.js
 var count_snippet string
 
-func countInsert() (string, error) {
+func countInsert(blogRef string) (string, error) {
 	buf := &bytes.Buffer{}
 	tmpl, err := template.New("tmpl").Parse(count_snippet)
 	if err != nil {
 		return "", err
 	}
 
-	err = tmpl.Execute(buf, templateParams{Endpoint: endpoint})
+	err = tmpl.Execute(buf, templateParams{Endpoint: endpoint, BlogRef: blogRef})
 	if err != nil {
 		return "", err
 	}
@@ -39,14 +42,15 @@ func countInsert() (string, error) {
 	return buf.String(), nil
 }
 
-func formInsert(post_ref string) (string, error) {
+func formInsert(blogRef string) (string, error) {
 	buf := &bytes.Buffer{}
+	log.Println(fmt.Sprintf("Snippet: Rendering form insert with blogref: %s", blogRef))
 	tmpl, err := template.New("tmpl").Parse(comment_snippet)
 	if err != nil {
 		return "", err
 	}
 
-	err = tmpl.Execute(buf, templateParams{Endpoint: endpoint, PostRef: post_ref})
+	err = tmpl.Execute(buf, templateParams{Endpoint: endpoint, BlogRef: blogRef})
 	if err != nil {
 		return "", err
 	}
@@ -56,15 +60,18 @@ func formInsert(post_ref string) (string, error) {
 
 func CountInsert(w http.ResponseWriter, r *http.Request) {
 	ext_endpoint, present := os.LookupEnv("EXT_ENDPOINT")
+	params := mux.Vars(r)
+	blog_ref := params["blogref"]
+	log.Println(fmt.Sprintf("Snippet: Making the count insert for %s", blog_ref))
 	if present {
 		endpoint = ext_endpoint
 	} else {
 		endpoint = "http://localhost:8080"
 	}
 
-	count_snippet, err := countInsert()
+	count_snippet, err := countInsert(blog_ref)
 	if err != nil {
-		log.Printf("Error: %v", err)
+		log.Println(fmt.Sprintf("Error: %v", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Cannot serve snippet"}`)
 		return
@@ -73,7 +80,8 @@ func CountInsert(w http.ResponseWriter, r *http.Request) {
 }
 
 func FormInsert(w http.ResponseWriter, r *http.Request) {
-	postref := r.URL.Query().Get("postref")
+	params := mux.Vars(r)
+	blogref := params["blogref"]
 
 	ext_endpoint, present := os.LookupEnv("EXT_ENDPOINT")
 	if present {
@@ -82,14 +90,14 @@ func FormInsert(w http.ResponseWriter, r *http.Request) {
 		endpoint = "http://localhost:8080"
 	}
 
-	// log.Printf("serving js insert: post ref is >%v<", postref)
-	comment_snippet, err := formInsert(postref)
+	comment_snippet, err := formInsert(blogref)
 	if err != nil {
-		log.Printf("Error: %v", err)
+		log.Println(fmt.Sprintf("Error: %v", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Cannot serve snippet"}`)
 		return
 	}
+	log.Println(fmt.Sprintf("serving js insert: blogref is >%s<", blogref))
 	ServeWebsiteInsert(w, r, comment_snippet)
 }
 

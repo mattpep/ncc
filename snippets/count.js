@@ -10,6 +10,33 @@ function urlToPostref (url) {
   return postref
 }
 
+function updateCountInfo (blogref) {
+  const countInfoURL = '{{ .Endpoint }}' + '/v2/blog/' + blogref + '/commentcounts'
+  fetch(countInfoURL, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }).then((response) => {
+    if (response.status !== 200) {
+      console.log('Unexpected status when getting comments count: ' + response.status)
+      return
+    }
+    return response.json()
+  }).then((json) => {
+    var dict = {}
+    json.counts.forEach((el, _) => dict[el.postref] = el.count);
+    const tags = document.getElementsByClassName('ncc')
+    for (let i = 0; i < tags.length; i++) {
+      const postref = urlToPostref(tags[i].href)
+      if ( postref in dict) {
+	tags[i].innerHTML = dict[postref] + ' ' + pluraliseComments(dict[postref])
+      }
+    }
+  })
+
+}
+
 function addCount (tag) {
   const postref = urlToPostref(tag.href)
   const countURL = '{{ .Endpoint }}' + '/commentcount/' + postref
@@ -36,9 +63,5 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('ncc - could not find a tag with id ncc')
     return
   }
-
-  const tags = document.getElementsByClassName('ncc')
-  for (let i = 0; i < tags.length; i++) {
-    addCount(tags[i])
-  }
+  updateCountInfo("{{ .BlogRef }}")
 })
