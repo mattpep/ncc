@@ -6,7 +6,7 @@ jobs:
   lint-and-test:
     # Install go modules and run tests
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.22
         environment:
           DATABASE_URL: postgres://user@dbhost:5432/database?sslmode=disable
       - image: cimg/postgres:17.5
