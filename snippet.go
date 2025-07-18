@@ -44,7 +44,7 @@ func countInsert(blogRef string) (string, error) {
 
 func formInsert(blogRef string) (string, error) {
 	buf := &bytes.Buffer{}
-	log.Println(fmt.Sprintf("Rendering form insert with blogref: %s", blogRef))
+	log.Println(fmt.Sprintf("Snippet: Rendering form insert with blogref: %s", blogRef))
 	tmpl, err := template.New("tmpl").Parse(comment_snippet)
 	if err != nil {
 		return "", err
@@ -62,7 +62,7 @@ func CountInsert(w http.ResponseWriter, r *http.Request) {
 	ext_endpoint, present := os.LookupEnv("EXT_ENDPOINT")
 	params := mux.Vars(r)
 	blog_ref := params["blogref"]
-	log.Println(fmt.Sprintf("making the count insert for %s", blog_ref))
+	log.Println(fmt.Sprintf("Snippet: Making the count insert for %s", blog_ref))
 	if present {
 		endpoint = ext_endpoint
 	} else {
