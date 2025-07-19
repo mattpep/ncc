@@ -58,7 +58,7 @@ func FlagComment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Error getting commentid when flagging"}`)
-		log.Println(fmt.Sprintf("Error getting commentid when flagging: %v", err))
+		log.Println(fmt.Sprintf("API/FlagComment: Error getting commentid when flagging: %v", err))
 		return
 	}
 	// check the parent post exists (404? 400?)
@@ -71,7 +71,7 @@ func FlagComment(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.WriteHeader(http.StatusInternalServerError)
 		io.WriteString(w, `{"status":"error","message":"Database error when flagging comment"}`)
-		log.Println(fmt.Sprintf("Database error when flagging comment %d: %v", comment_id, err))
+		log.Println(fmt.Sprintf("API/FlagComment: Database error when flagging comment %d: %v", comment_id, err))
 	} else {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")

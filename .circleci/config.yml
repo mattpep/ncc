@@ -44,12 +44,12 @@ jobs:
             migrate -path /home/circleci/project/db/migrations -database ${DATABASE_URL} up
       - run:
           name: Run tests
-          command: gotestsum --junitfile junit.xml
+          command: gotestsum --junitfile junit.xml -- -p 1
       - store_test_results:
           path: junit.xml
   build:
     docker:
-      - image: cimg/go:1.20
+      - image: cimg/go:1.22
     steps:
       - checkout
       - restore_cache:
