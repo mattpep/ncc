@@ -16,7 +16,7 @@
         owner: root
         group: root
 
-    - name: Start lurl
+    - name: Start ncc
       ansible.builtin.service:
         name: ncc
         state: started
