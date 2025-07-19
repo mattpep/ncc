@@ -36,6 +36,7 @@ type ModTask struct {
 	DisplayName string
 	Body        string
 	PostRef     string
+	BlogRef     string
 	DateTime    string
 	Actor       string
 }

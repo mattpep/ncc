@@ -26,7 +26,7 @@ func ShowTasks() {
 	}
 
 	for _, task := range tasks {
-		fmt.Printf("Comment in need of approval: \n PostRef: %s\n Author:  %s at %s\n From:    %s\n Comment: %s\n", task.PostRef, task.DisplayName, task.DateTime, task.Actor, task.Body)
+		fmt.Printf("Comment in need of approval: \n PostRef: %s\n Author:  %s at %s\n From:    %s\n Comment: %s\n Blog: %s\n", task.PostRef, task.DisplayName, task.DateTime, task.Actor, task.Body, task.BlogRef)
 		fmt.Printf("What action? ('a' == Approve, 'd' to delete, 'q' to quit, any other key to skip)  ")
 		r, err := tty.ReadRune()
 		if err != nil {

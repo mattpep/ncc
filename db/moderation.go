@@ -14,7 +14,7 @@ func GetModerationTasks() ([]types.ModTask, error) {
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not set up db: %v", err))
 	}
-	flagged_comments_sql := `SELECT comments.id, comments.display_name, comments.body, rma.date_time, comments.post_ref, rma.actor
+	flagged_comments_sql := `SELECT comments.id, comments.display_name, comments.body, rma.date_time, comments.post_ref, rma.actor, comments.blog
 				FROM comments
 				INNER JOIN (
 					SELECT id, date_time, comment_id, action, actor, ROW_NUMBER() OVER (PARTITION BY comment_id ORDER BY DATE_TIME DESC) recency
@@ -36,15 +36,16 @@ func GetModerationTasks() ([]types.ModTask, error) {
 		var display_name string
 		var date_time string
 		var post_ref string
+		var blog_ref string
 		var actor string
 
-		err = rows.Scan(&id, &display_name, &body, &date_time, &post_ref, &actor)
+		err = rows.Scan(&id, &display_name, &body, &date_time, &post_ref, &actor, &blog_ref)
 
 		if err != nil {
 			log.Println(fmt.Sprintf("could not scan row: %v", err))
 			return nil, errors.New(fmt.Sprintf("Error parsing response from db: %v", err))
 		}
-		tasks = append(tasks, types.ModTask{Id: id, Body: body, DisplayName: display_name, PostRef: post_ref, DateTime: date_time, Actor: actor})
+		tasks = append(tasks, types.ModTask{Id: id, Body: body, DisplayName: display_name, PostRef: post_ref, DateTime: date_time, Actor: actor, BlogRef: blog_ref})
 	}
 	return tasks, nil
 }
@@ -73,5 +74,4 @@ func DeleteComment(comment_id int) error {
 		return errors.New(fmt.Sprintf("Could not delete comment: %v", err))
 	}
 	return nil
-
 }
