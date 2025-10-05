@@ -113,7 +113,7 @@ func GetPostComments(blog_ref string, post_ref string) ([]types.Comment, error) 
 		var date_time string
 		// var post_ref string
 
-		err = rows.Scan(&id, &body, &display_name, &date_time)
+		err = rows.Scan(&id, &display_name, &body, &date_time)
 
 		if err != nil {
 			log.Println(fmt.Sprintf("could not scan row: %v", err))
